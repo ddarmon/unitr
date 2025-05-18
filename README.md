@@ -52,6 +52,11 @@ the comparison across a list of inputs. Parallel evaluation via **furrr** is
 supported by setting `parallel = "furrr"`.
 
 ```r
+library(furrr)
+
+# Set up {future} workers
+plan("multisession", workers = 7)
+
 inputs <- list(df1, df2)
 args <- list(list(threshold = 0.1), list(threshold = 0.2))
 
