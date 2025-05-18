@@ -4,13 +4,14 @@
 #' @param sha_old Character string; base commit SHA/branch/tag.
 #' @param sha_new Character string; commit SHA/branch/tag to test.
 #' @param entry_fun Name of exported function to invoke (default "main").
-#' @param data Data frame or list of arguments passed to `entry_fun`.
+#' @param data Data frame passed as the first argument to `entry_fun`.
+#' @param ... Additional arguments passed on to `entry_fun`.
 #' @param diff_fun Function used to diff objects (default `waldo::compare`).
 #' @return A list with elements `passed`, `diff`, `old`, `new`.
 #' @export
 sha_compare <- function(repo, sha_old, sha_new,
                         entry_fun = "main",
-                        data = NULL,
+                        data = NULL, ...,
                         diff_fun = waldo::compare) {
   stopifnot(requireNamespace("pak", quietly = TRUE))
   stopifnot(requireNamespace("waldo", quietly = TRUE))
@@ -24,17 +25,20 @@ sha_compare <- function(repo, sha_old, sha_new,
   pak::pkg_install(paste0(repo, "@", sha_old), lib = lib_old, ask = FALSE)
   pak::pkg_install(paste0(repo, "@", sha_new), lib = lib_new, ask = FALSE)
 
+  extra_args <- list(...)
+
   run_entry <- function(lib) {
     withr::with_libpaths(lib, action = "prefix", {
       pkg <- basename(repo)
       fun <- get(entry_fun, envir = asNamespace(pkg))
-      if (is.null(data)) {
-        fun()
+      args <- if (is.null(data)) {
+        extra_args
       } else if (is.data.frame(data) || !is.list(data)) {
-        fun(data)
+        c(list(data), extra_args)
       } else {
-        do.call(fun, data)
+        c(data, extra_args)
       }
+      do.call(fun, args)
     })
   }
 
