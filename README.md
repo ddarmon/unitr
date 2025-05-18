@@ -19,39 +19,31 @@ pak::pkg_install("ddarmon/regressr")
 ```r
 library(regressr)
 
-# Directories used to install the package versions
-old_lib <- tempfile("regressr_old_")
-new_lib <- tempfile("regressr_new_")
-dir.create(old_lib)
-dir.create(new_lib)
+# Install the two versions once
+libs <- sha_install_versions(
+  repo = "org/pkg",
+  sha_old = "abc123",
+  sha_new = "def456"
+)
 
-# SHAs to compare against a baseline commit
-shas <- c("def456", "ghi789")
-for (i in seq_along(shas)) {
-  res <- sha_compare(
-    repo = "org/pkg",
-    sha_old = "abc123",   # baseline commit
-    sha_new = shas[i],     # comparison commit
-    pkg = "pkg",
-    entry_fun = "main",
-    data = data.frame(x = 1:3),
-    old_lib = old_lib,
-    new_lib = new_lib,
-    install = i == 1,      # reuse installs after first iteration
-    quiet = TRUE
-  )
+res <- sha_compare(
+  repo = "org/pkg",
+  sha_old = "abc123",
+  sha_new = "def456",
+  lib_old = libs$lib_old,
+  lib_new = libs$lib_new,
+  install = FALSE
+)
 
-  if (res$passed) {
-    print("Objects identical")
-  } else {
-    print(res$diff)
-  }
+if (res$passed) {
+  print("Objects identical")
+} else {
+  print(res$diff)
 }
 ```
 
-Reusing the library directories and setting `install = FALSE` after the first
-iteration avoids downloading and installing the packages again. This speeds up
-repeated comparisons and reduces unnecessary network traffic.
+Installing once and reusing the library directories avoids repeated downloads
+and speeds up comparisons.
 
 ## `sha_compare_many()`
 
@@ -69,8 +61,8 @@ res <- sha_compare_many(
   sha_new = "def456",
   inputs = inputs,
   args_list = args,
-  lib_old = old_lib,
-  lib_new = new_lib,
+  lib_old = libs$lib_old,
+  lib_new = libs$lib_new,
   parallel = "purrr"
 )
 ```

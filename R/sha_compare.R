@@ -11,7 +11,9 @@
 #' @param lib_new Path to library for the new version. If `NULL` a
 #'   temporary directory is used.
 #' @param install Logical, whether to install the package versions
-#'   before running (default `TRUE`).
+#'   before running (default `TRUE`). When `TRUE`,
+#'   [sha_install_versions()] installs the packages into
+#'   `lib_old` and `lib_new`.
 #' @param quiet Logical, whether to suppress messages from `pak::pkg_install`
 #'   (default `TRUE`).
 #' @param ... Additional arguments passed on to `entry_fun`.
@@ -33,24 +35,22 @@ sha_compare <- function(repo, sha_old, sha_new,
   stopifnot(requireNamespace("waldo", quietly = TRUE))
   stopifnot(requireNamespace("withr", quietly = TRUE))
 
-  if (is.null(lib_old)) lib_old <- tempfile("regressr_old_")
-  if (is.null(lib_new)) lib_new <- tempfile("regressr_new_")
-  dir.create(lib_old, recursive = TRUE, showWarnings = FALSE)
-  dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
-
   if (install) {
-    message("Installing old and new versions...")
-
-    install_pkgs <- function() {
-      pak::pkg_install(paste0(repo, "@", sha_old), lib = lib_old, ask = FALSE)
-      pak::pkg_install(paste0(repo, "@", sha_new), lib = lib_new, ask = FALSE)
-    }
-
-    if (quiet) {
-      suppressMessages(install_pkgs())
-    } else {
-      install_pkgs()
-    }
+    libs <- sha_install_versions(
+      repo = repo,
+      sha_old = sha_old,
+      sha_new = sha_new,
+      lib_old = lib_old,
+      lib_new = lib_new,
+      quiet = quiet
+    )
+    lib_old <- libs$lib_old
+    lib_new <- libs$lib_new
+  } else {
+    if (is.null(lib_old)) lib_old <- tempfile("regressr_old_")
+    if (is.null(lib_new)) lib_new <- tempfile("regressr_new_")
+    dir.create(lib_old, recursive = TRUE, showWarnings = FALSE)
+    dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
   }
 
   extra_args <- list(...)

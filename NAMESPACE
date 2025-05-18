@@ -1,3 +1,4 @@
 export(sha_compare)
 export(print.regressr_result)
 export(sha_compare_many)
+export(sha_install_versions)
