@@ -10,6 +10,7 @@ test_that("Outputs are identical across SHAs", {
     repo = "org/pkg",
     sha_old = Sys.getenv("SHA_BASE", "main"),
     sha_new = Sys.getenv("SHA_NEW", "HEAD"),
+    pkg = "pkg",
     entry_fun = "main",
     data = input
   )
