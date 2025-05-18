@@ -3,6 +3,7 @@
 #' @param repo GitHub repo specification ("owner/pkg").
 #' @param sha_old Character string; base commit SHA/branch/tag.
 #' @param sha_new Character string; commit SHA/branch/tag to test.
+#' @param pkg Name of the package (defaults to `basename(repo)`).
 #' @param entry_fun Name of exported function to invoke (default "main").
 #' @param data Data frame passed as the first argument to `entry_fun`.
 #' @param ... Additional arguments passed on to `entry_fun`.
@@ -10,6 +11,7 @@
 #' @return A list with elements `passed`, `diff`, `old`, `new`.
 #' @export
 sha_compare <- function(repo, sha_old, sha_new,
+                        pkg = basename(repo),
                         entry_fun = "main",
                         data = NULL, ...,
                         diff_fun = waldo::compare) {
@@ -29,7 +31,6 @@ sha_compare <- function(repo, sha_old, sha_new,
 
   run_entry <- function(lib) {
     withr::with_libpaths(lib, action = "prefix", {
-      pkg <- basename(repo)
       fun <- get(entry_fun, envir = asNamespace(pkg))
       args <- if (is.null(data)) {
         extra_args
