@@ -31,6 +31,7 @@ sha_compare <- function(repo, sha_old, sha_new,
 
   run_entry <- function(lib) {
     withr::with_libpaths(lib, action = "prefix", {
+      if (pkg %in% loadedNamespaces()) unloadNamespace(pkg)
       fun <- get(entry_fun, envir = asNamespace(pkg))
       args <- if (is.null(data)) {
         extra_args
@@ -39,7 +40,9 @@ sha_compare <- function(repo, sha_old, sha_new,
       } else {
         c(data, extra_args)
       }
-      do.call(fun, args)
+      result <- do.call(fun, args)
+      unloadNamespace(pkg)
+      result
     })
   }
 
