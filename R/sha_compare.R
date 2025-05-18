@@ -12,7 +12,8 @@
 #'   temporary directory is used.
 #' @param install Logical, whether to install the package versions
 #'   before running (default `TRUE`).
-#' @param quiet Passed to `pak::pkg_install()` when `install` is `TRUE`.
+#' @param quiet Logical, whether to suppress messages from `pak::pkg_install`
+#'   (default `TRUE`).
 #' @param ... Additional arguments passed on to `entry_fun`.
 #' @param diff_fun Function used to diff objects (default `waldo::compare`).
 #' @return A list with elements `passed`, `diff`, `old`, `new`.
@@ -36,10 +37,18 @@ sha_compare <- function(repo, sha_old, sha_new,
   dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
 
   if (install) {
-    pak::pkg_install(paste0(repo, "@", sha_old),
-                     lib = lib_old, ask = FALSE, quiet = quiet)
-    pak::pkg_install(paste0(repo, "@", sha_new),
-                     lib = lib_new, ask = FALSE, quiet = quiet)
+    message("Installing old and new versions...")
+
+    install_pkgs <- function() {
+      pak::pkg_install(paste0(repo, "@", sha_old), lib = lib_old, ask = FALSE)
+      pak::pkg_install(paste0(repo, "@", sha_new), lib = lib_new, ask = FALSE)
+    }
+
+    if (quiet) {
+      suppressMessages(install_pkgs())
+    } else {
+      install_pkgs()
+    }
   }
 
   extra_args <- list(...)
