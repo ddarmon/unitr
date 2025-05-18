@@ -1,8 +1,10 @@
 #' Compare multiple inputs or SHAs using `sha_compare()`
 #'
 #' Runs `sha_compare()` over a list of data inputs (and optional argument
-#' lists) and aggregates the results. Optionally executes in parallel using
-#' `furrr`.
+#' lists) and aggregates the results. When `parallel == "furrr"` both loops
+#' use `furrr::future_map` so evaluations run in parallel. Library
+#' directories are created once and reused across iterations so packages are
+#' installed a single time.
 #'
 #' @param repo GitHub repo specification ("owner/pkg").
 #' @param sha_old Base commit SHA/branch/tag.
@@ -20,7 +22,8 @@
 #' @param parallel Either "purrr" (serial) or "furrr" (parallel).
 #' @param diff_fun Diff function passed to `sha_compare()`.
 #' @param diff_args List of additional arguments passed to `diff_fun`.
-#' @return A data frame summarizing the results.
+#' @return A tibble with columns `input`, `sha_new`, `passed`, `diff` and
+#'   `result`.
 #' @export
 sha_compare_many <- function(repo, sha_old, sha_new,
                              inputs, args_list = NULL,
@@ -35,47 +38,56 @@ sha_compare_many <- function(repo, sha_old, sha_new,
 
   mapper <- if (parallel == "furrr") furrr::future_map else purrr::map
 
-  if (is.null(args_list)) args_list <- replicate(length(inputs), list(), simplify = FALSE)
+  if (is.null(lib_old)) lib_old <- tempfile("regressr_old_")
+  if (is.null(lib_new)) lib_new <- tempfile("regressr_new_")
+  dir.create(lib_old, recursive = TRUE, showWarnings = FALSE)
+  dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
+
+  if (is.null(args_list)) {
+    args_list <- replicate(length(inputs), list(), simplify = FALSE)
+  }
 
   args_list <- rep(args_list, length.out = length(inputs))
-
-  results <- vector("list", length(inputs))
   
   results <- mapper(
     seq_along(inputs),
     function(i) {
-      extra <- args_list[[i]]  
+      extra <- args_list[[i]]
       if (!is.list(extra)) extra <- list()
-      
-      sha_new_result <- NULL
-      for (j in seq_along(sha_new)) {
-        sha_new_result <- do.call(
-          sha_compare,
-          c(
-            list(
-              repo       = repo,
-              sha_old    = sha_old, 
-              sha_new    = sha_new[j],
-              pkg        = pkg,
-              entry_fun  = entry_fun,
-              data       = inputs[[i]],
-              lib_old    = lib_old,
-              lib_new    = lib_new,
-              install    = install && j == 1 && i == 1,
-              quiet      = quiet,
-              diff_fun   = diff_fun,
-              diff_args  = diff_args
-            ),
-            extra
+
+      mapper(
+        seq_along(sha_new),
+        function(j) {
+          do.call(
+            sha_compare,
+            c(
+              list(
+                repo       = repo,
+                sha_old    = sha_old,
+                sha_new    = sha_new[j],
+                pkg        = pkg,
+                entry_fun  = entry_fun,
+                data       = inputs[[i]],
+                lib_old    = lib_old,
+                lib_new    = lib_new,
+                install    = install && i == 1 && j == 1,
+                quiet      = quiet,
+                diff_fun   = diff_fun,
+                diff_args  = diff_args
+              ),
+              extra
+            )
           )
-        )
-      }
-      sha_new_result
+        }
+      )
     }
   )
 
+  results <- purrr::flatten(results)
+
   tibble::tibble(
-    input = seq_along(inputs),
+    input = rep(seq_along(inputs), each = length(sha_new)),
+    sha_new = rep(sha_new, times = length(inputs)),
     passed = vapply(results, function(x) x$passed, logical(1)),
     diff = lapply(results, "[[", "diff"),
     result = results
