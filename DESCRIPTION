@@ -1,0 +1,14 @@
+Package: unitr
+Title: Minimal SHA Regression Testing Helpers
+Version: 0.0.0.9000
+Authors@R: c(person("Your", "Name", email = "you@example.com", role = c("aut", "cre")))
+Description: Provides a helper to install two versions of a package from GitHub (identified by commit SHA) in isolated libraries and compare the results of a target function using waldo, suitable for use inside testthat tests and CI.
+License: MIT
+Encoding: UTF-8
+Imports:
+    pak,
+    waldo,
+    withr
+Suggests:
+    testthat
+
