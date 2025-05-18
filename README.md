@@ -11,7 +11,7 @@ changes between commits in continuous integration and testthat workflows.
 Use `pak` to install from GitHub:
 
 ```r
-pak::pkg_install("owner/unitr")
+pak::pkg_install("ddarmon/unitr")
 ```
 
 ## Example
@@ -38,7 +38,3 @@ if (res$passed) {
 
 The object returned by `sha_compare()` includes whether the objects are
 identical (`passed`) as well as the two results and their diff.
-
-## License
-
-MIT
