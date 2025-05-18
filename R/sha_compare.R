@@ -6,6 +6,13 @@
 #' @param pkg Name of the package (defaults to `basename(repo)`).
 #' @param entry_fun Name of exported function to invoke (default "main").
 #' @param data Data frame passed as the first argument to `entry_fun`.
+#' @param lib_old Path to library for the old version. If `NULL` a
+#'   temporary directory is used.
+#' @param lib_new Path to library for the new version. If `NULL` a
+#'   temporary directory is used.
+#' @param install Logical, whether to install the package versions
+#'   before running (default `TRUE`).
+#' @param quiet Passed to `pak::pkg_install()` when `install` is `TRUE`.
 #' @param ... Additional arguments passed on to `entry_fun`.
 #' @param diff_fun Function used to diff objects (default `waldo::compare`).
 #' @return A list with elements `passed`, `diff`, `old`, `new`.
@@ -13,19 +20,27 @@
 sha_compare <- function(repo, sha_old, sha_new,
                         pkg = basename(repo),
                         entry_fun = "main",
-                        data = NULL, ...,
+                        data = NULL,
+                        lib_old = NULL,
+                        lib_new = NULL,
+                        install = TRUE,
+                        quiet = TRUE, ...,
                         diff_fun = waldo::compare) {
   stopifnot(requireNamespace("pak", quietly = TRUE))
   stopifnot(requireNamespace("waldo", quietly = TRUE))
   stopifnot(requireNamespace("withr", quietly = TRUE))
 
-  lib_old <- tempfile("regressr_old_")
-  lib_new <- tempfile("regressr_new_")
-  dir.create(lib_old, recursive = TRUE)
-  dir.create(lib_new, recursive = TRUE)
+  if (is.null(lib_old)) lib_old <- tempfile("regressr_old_")
+  if (is.null(lib_new)) lib_new <- tempfile("regressr_new_")
+  dir.create(lib_old, recursive = TRUE, showWarnings = FALSE)
+  dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
 
-  pak::pkg_install(paste0(repo, "@", sha_old), lib = lib_old, ask = FALSE)
-  pak::pkg_install(paste0(repo, "@", sha_new), lib = lib_new, ask = FALSE)
+  if (install) {
+    pak::pkg_install(paste0(repo, "@", sha_old),
+                     lib = lib_old, ask = FALSE, quiet = quiet)
+    pak::pkg_install(paste0(repo, "@", sha_new),
+                     lib = lib_new, ask = FALSE, quiet = quiet)
+  }
 
   extra_args <- list(...)
 
