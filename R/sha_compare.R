@@ -16,6 +16,7 @@
 #'   (default `TRUE`).
 #' @param ... Additional arguments passed on to `entry_fun`.
 #' @param diff_fun Function used to diff objects (default `waldo::compare`).
+#' @param diff_args List of additional arguments passed to `diff_fun`.
 #' @return A list with elements `passed`, `diff`, `old`, `new`.
 #' @export
 sha_compare <- function(repo, sha_old, sha_new,
@@ -25,8 +26,9 @@ sha_compare <- function(repo, sha_old, sha_new,
                         lib_old = NULL,
                         lib_new = NULL,
                         install = TRUE,
-                        quiet = TRUE, ...,
-                        diff_fun = waldo::compare) {
+                        quiet = TRUE, ..., 
+                        diff_fun = waldo::compare, 
+                        diff_args = list()) {
   stopifnot(requireNamespace("pak", quietly = TRUE))
   stopifnot(requireNamespace("waldo", quietly = TRUE))
   stopifnot(requireNamespace("withr", quietly = TRUE))
@@ -76,7 +78,7 @@ sha_compare <- function(repo, sha_old, sha_new,
   message("Running ", entry_fun, " on new version...")
   new_res <- run_entry(lib_new)
 
-  diff <- diff_fun(old_res, new_res)
+  diff <- do.call(diff_fun, c(list(old_res, new_res), diff_args))
   passed <- length(diff) == 0L
 
   structure(list(passed = passed,
