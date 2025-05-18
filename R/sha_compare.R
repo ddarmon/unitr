@@ -19,8 +19,8 @@ sha_compare <- function(repo, sha_old, sha_new,
   stopifnot(requireNamespace("waldo", quietly = TRUE))
   stopifnot(requireNamespace("withr", quietly = TRUE))
 
-  lib_old <- tempfile("unitr_old_")
-  lib_new <- tempfile("unitr_new_")
+  lib_old <- tempfile("regressr_old_")
+  lib_new <- tempfile("regressr_new_")
   dir.create(lib_old, recursive = TRUE)
   dir.create(lib_new, recursive = TRUE)
 
@@ -59,11 +59,11 @@ sha_compare <- function(repo, sha_old, sha_new,
                  diff = diff,
                  old = old_res,
                  new = new_res),
-            class = "unitr_result")
+            class = "regressr_result")
 }
 
 #' @export
-print.unitr_result <- function(x, ...) {
+print.regressr_result <- function(x, ...) {
   if (x$passed) {
     cat("\u2714 Objects identical\n")
   } else {

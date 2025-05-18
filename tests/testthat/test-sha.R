@@ -1,5 +1,5 @@
 library(testthat)
-library(unitr)
+library(regressr)
 
 test_that("Outputs are identical across SHAs", {
   skip_if_offline()

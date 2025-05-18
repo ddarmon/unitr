@@ -1,4 +1,4 @@
-# unitr
+# regressr
 
 Minimal helpers for regression testing across GitHub commit SHAs.
 
@@ -11,13 +11,13 @@ changes between commits in continuous integration and testthat workflows.
 Use `pak` to install from GitHub:
 
 ```r
-pak::pkg_install("ddarmon/unitr")
+pak::pkg_install("ddarmon/regressr")
 ```
 
 ## Example
 
 ```r
-library(unitr)
+library(regressr)
 
 # Compare `main()` results between two SHAs of "org/pkg"
 res <- sha_compare(

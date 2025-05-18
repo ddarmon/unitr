@@ -1,2 +1,2 @@
 export(sha_compare)
-export(print.unitr_result)
+export(print.regressr_result)

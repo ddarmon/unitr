@@ -1,4 +1,4 @@
-Package: unitr
+Package: regressr
 Title: Minimal SHA Regression Testing Helpers
 Version: 0.0.0.9000
 Authors@R: c(person("Your", "Name", email = "you@example.com", role = c("aut", "cre")))
