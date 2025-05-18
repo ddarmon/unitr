@@ -17,7 +17,9 @@
 #' @param lib_old Path to library for the old version. Created if `NULL`.
 #' @param lib_new Path to library for the new version. Created if `NULL`.
 #' @param install Logical, whether to install the packages on the first
-#'   iteration.
+#'   iteration. When `TRUE`, [sha_install_versions()] installs the
+#'   packages before entering the loops and subsequent calls reuse the
+#'   libraries.
 #' @param quiet Logical, passed to `sha_compare()`.
 #' @param parallel Either "purrr" (serial) or "furrr" (parallel).
 #' @param diff_fun Diff function passed to `sha_compare()`.
@@ -38,10 +40,24 @@ sha_compare_many <- function(repo, sha_old, sha_new,
 
   mapper <- if (parallel == "furrr") furrr::future_map else purrr::map
 
-  if (is.null(lib_old)) lib_old <- tempfile("regressr_old_")
-  if (is.null(lib_new)) lib_new <- tempfile("regressr_new_")
-  dir.create(lib_old, recursive = TRUE, showWarnings = FALSE)
-  dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
+  if (install) {
+    libs <- sha_install_versions(
+      repo = repo,
+      sha_old = sha_old,
+      sha_new = sha_new[1],
+      lib_old = lib_old,
+      lib_new = lib_new,
+      quiet = quiet
+    )
+    lib_old <- libs$lib_old
+    lib_new <- libs$lib_new
+    install <- FALSE
+  } else {
+    if (is.null(lib_old)) lib_old <- tempfile("regressr_old_")
+    if (is.null(lib_new)) lib_new <- tempfile("regressr_new_")
+    dir.create(lib_old, recursive = TRUE, showWarnings = FALSE)
+    dir.create(lib_new, recursive = TRUE, showWarnings = FALSE)
+  }
 
   if (is.null(args_list)) {
     args_list <- replicate(length(inputs), list(), simplify = FALSE)
