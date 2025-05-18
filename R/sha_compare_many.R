@@ -40,29 +40,39 @@ sha_compare_many <- function(repo, sha_old, sha_new,
   args_list <- rep(args_list, length.out = length(inputs))
 
   results <- vector("list", length(inputs))
-
-  for (j in seq_along(sha_new)) {
-    for (i in seq_along(inputs)) {
-      extra <- args_list[[i]]
+  
+  results <- mapper(
+    seq_along(inputs),
+    function(i) {
+      extra <- args_list[[i]]  
       if (!is.list(extra)) extra <- list()
-      results[[i]] <- mapper(1, function(z) {
-        do.call(sha_compare, c(list(
-          repo = repo,
-          sha_old = sha_old,
-          sha_new = sha_new[j],
-          pkg = pkg,
-          entry_fun = entry_fun,
-          data = inputs[[i]],
-          lib_old = lib_old,
-          lib_new = lib_new,
-          install = install && j == 1 && i == 1,
-          quiet = quiet,
-          diff_fun = diff_fun,
-          diff_args = diff_args
-        ), extra))
-      })[[1]]
+      
+      sha_new_result <- NULL
+      for (j in seq_along(sha_new)) {
+        sha_new_result <- do.call(
+          sha_compare,
+          c(
+            list(
+              repo       = repo,
+              sha_old    = sha_old, 
+              sha_new    = sha_new[j],
+              pkg        = pkg,
+              entry_fun  = entry_fun,
+              data       = inputs[[i]],
+              lib_old    = lib_old,
+              lib_new    = lib_new,
+              install    = install && j == 1 && i == 1,
+              quiet      = quiet,
+              diff_fun   = diff_fun,
+              diff_args  = diff_args
+            ),
+            extra
+          )
+        )
+      }
+      sha_new_result
     }
-  }
+  )
 
   tibble::tibble(
     input = seq_along(inputs),
