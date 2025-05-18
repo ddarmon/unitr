@@ -46,7 +46,10 @@ sha_compare <- function(repo, sha_old, sha_new,
     })
   }
 
+  message("Running ", entry_fun, " on old version...")
   old_res <- run_entry(lib_old)
+
+  message("Running ", entry_fun, " on new version...")
   new_res <- run_entry(lib_new)
 
   diff <- diff_fun(old_res, new_res)
